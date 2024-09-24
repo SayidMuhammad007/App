@@ -1,11 +1,11 @@
 <x-filament-panels::page>
-    <form wire:submit.prevent="calculate">
+    {{-- <form wire:submit.prevent="calculate">
         {{ $this->form }}
 
         <x-filament::button type="submit" style="margin-top: 20px;">
             Рассчитать
         </x-filament::button>
-    </form>
+    </form> --}}
 
     <div class="mt-8">
         <h2 class="text-xl font-semibold mb-2">Результаты:</h2>
