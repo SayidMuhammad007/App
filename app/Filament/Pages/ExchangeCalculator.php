@@ -30,10 +30,10 @@ class ExchangeCalculator extends Page implements HasForms
     {
         $this->form->fill();
     }
-
     public function form(Form $form): Form
     {
-        $data = session('result');
+        // Retrieve session data safely
+        $data = session('result') ?? []; // Default to an empty array if 'result' is not set
         $qty = session('qty', 0); // Default to 0 if 'qty' is not set
 
         // Check if $data is an array and has the 'price' key
@@ -61,6 +61,7 @@ class ExchangeCalculator extends Page implements HasForms
                     ->required(),
             ]);
     }
+
 
 
     public function calculate(): void

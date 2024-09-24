@@ -42,7 +42,7 @@ class XaridData extends Page implements HasTable, HasForms
 
     protected function getHeaderActions(): array
     {
-        $data = session('result');
+        $data = session('result') ?? []; // Default to an empty array if 'result' is not set
         $defaultPrice = is_array($data) && isset($data['price']) ? $data['price'] : '';
         $qty = session('qty', 0); // Default to 0 if 'qty' is not set
         return [
