@@ -45,7 +45,7 @@ class ExchangeCalculator extends Page implements HasForms
                     ->label('Стартовая сумма товара')
                     ->mask(RawJs::make('$money($input)'))
                     ->stripCharacters(',')
-                    ->default($defaultPrice)
+                    // ->default($defaultPrice)
                     ->required(),
                 TextInput::make('quantity')
                     ->label('Количество')
