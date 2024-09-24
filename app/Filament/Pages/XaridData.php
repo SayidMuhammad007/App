@@ -43,7 +43,8 @@ class XaridData extends Page implements HasTable, HasForms
     protected function getHeaderActions(): array
     {
         $data = session('result');
-        $qty = session('qty');
+        $defaultPrice = isset($data) && isset($data['price']) ? $data['price'] : '';
+        $qty = session('qty', 0); // Default to 0 if 'qty' is not set
         return [
             ActionsAction::make('ExchangeCalculator')
                 ->label('Exchange calculator')
@@ -55,7 +56,7 @@ class XaridData extends Page implements HasTable, HasForms
                                 ->label('Стартовая сумма товара')
                                 ->mask(RawJs::make('$money($input)'))
                                 ->stripCharacters(',')
-                                ->default($data['price'] ?? '')
+                                ->default($defaultPrice)
                                 ->required()
                                 ->disabled()
                                 ->reactive(),

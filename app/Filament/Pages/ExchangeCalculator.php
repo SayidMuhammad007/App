@@ -34,14 +34,15 @@ class ExchangeCalculator extends Page implements HasForms
     public function form(Form $form): Form
     {
         $data = session('result');
-        $qty = session('qty');
+        $qty = session('qty', 0); // Default to 0 if 'qty' is not set
+        $defaultPrice = isset($data) && isset($data['price']) ? $data['price'] : '';
         return $form
             ->schema([
                 TextInput::make('startSum')
                     ->label('Стартовая сумма товара')
                     ->mask(RawJs::make('$money($input)'))
                     ->stripCharacters(',')
-                    ->default($data['price'] ?? '')
+                    ->default($defaultPrice)
                     ->required(),
                 TextInput::make('quantity')
                     ->label('Количество')
