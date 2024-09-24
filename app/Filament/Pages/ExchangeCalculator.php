@@ -35,7 +35,10 @@ class ExchangeCalculator extends Page implements HasForms
     {
         $data = session('result');
         $qty = session('qty', 0); // Default to 0 if 'qty' is not set
-        $defaultPrice = isset($data) && isset($data['price']) ? $data['price'] : '';
+
+        // Check if $data is an array and has the 'price' key
+        $defaultPrice = is_array($data) && isset($data['price']) ? $data['price'] : '';
+
         return $form
             ->schema([
                 TextInput::make('startSum')
@@ -48,7 +51,7 @@ class ExchangeCalculator extends Page implements HasForms
                     ->label('Количество')
                     ->mask(RawJs::make('$money($input)'))
                     ->stripCharacters(',')
-                    ->default($qty ?? '')
+                    ->default($qty ?? '') // Default to empty string if qty is not set
                     ->required(),
                 TextInput::make('unitPrice')
                     ->label('Моя цена за единицу товара')
@@ -58,6 +61,7 @@ class ExchangeCalculator extends Page implements HasForms
                     ->required(),
             ]);
     }
+
 
     public function calculate(): void
     {
