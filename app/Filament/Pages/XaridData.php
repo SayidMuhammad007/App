@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\XaridData as ModelsXaridData;
+use Filament\Actions\Action as ActionsAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Page;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -13,9 +14,14 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Forms;
 use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Placeholder;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Support\Enums\VerticalAlignment;
+use Filament\Support\RawJs;
+use Illuminate\Support\HtmlString;
 
 class XaridData extends Page implements HasTable, HasForms
 {
@@ -34,6 +40,117 @@ class XaridData extends Page implements HasTable, HasForms
     }
 
     protected $listeners = ['refreshRelations' => '$refresh'];
+
+    protected function getHeaderActions(): array
+    {
+        $data = session('result');
+        $qty = session('qty');
+        return [
+            ActionsAction::make('ExchangeCalculator')
+                ->label('Exchange calculator')
+                ->icon('heroicon-o-calculator')
+                ->form([
+                    Forms\Components\Fieldset::make('Exchange Calculator')
+                        ->schema([
+                            TextInput::make('startSum')
+                                ->label('Стартовая сумма товара')
+                                ->mask(RawJs::make('$money($input)'))
+                                ->stripCharacters(',')
+                                ->default($data['price'])
+                                ->required()
+                                ->disabled()
+                                ->reactive(),
+                            TextInput::make('quantity')
+                                ->label('Количество')
+                                ->mask(RawJs::make('$money($input)'))
+                                ->stripCharacters(',')
+                                ->default($qty)
+                                ->required()
+                                ->disabled()
+                                ->reactive(),
+                            TextInput::make('unitPrice')
+                                ->label('Моя цена за единицу товара')
+                                ->mask(RawJs::make('$money($input)'))
+                                ->stripCharacters(',')
+                                ->numeric()
+                                ->required()
+                                ->columnSpanFull()
+                                ->reactive(),
+                            Placeholder::make('results')
+                                ->label('Результаты расчета')
+                                ->content(function (Forms\Get $get) {
+                                    $startSum = $get('startSum');
+                                    $quantity = $get('quantity');
+                                    $unitPrice = $get('unitPrice');
+
+                                    if ($startSum && $quantity && $unitPrice) {
+                                        return $this->calculateResults($startSum, $quantity, $unitPrice);
+                                    }
+
+                                    return 'Заполните все поля для расчета.';
+                                })
+                        ])
+                ])
+                ->action(function (array $data) {
+                    // This action will be called when the form is submitted
+                    // You can add any additional logic here if needed
+                })
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Close')
+        ];
+    }
+
+    private function calculateResults($startSum, $quantity, $unitPrice): HtmlString
+    {
+        // $startSum = (float) str_replace(',', '', $startSum);
+        // $quantity = (float) str_replace(',', '', $quantity);
+        // $unitPrice = (float) str_replace(',', '', $unitPrice);
+
+        // $totalSum = $quantity * $unitPrice;
+        // $difference = $startSum - $totalSum;
+
+        // if (abs($difference / $startSum) < 0.2) {
+        //     $marginSum = $difference * 0.03;
+        // } else {
+        //     $marginSum = ($difference + $startSum) * 0.03;
+        // }
+
+        // $commission = $totalSum * 0.0015;
+        // $totalMarginSum = $marginSum + $commission;
+
+        // $formatMoney = fn($value) => number_format(abs($value), 2, '.', ' ') . ' UZS';
+        // $formatWithSign = fn($value) => ($value >= 0 ? '+' : '-') . $formatMoney($value);
+
+
+        $startSum = (float) str_replace(',', '', $startSum);
+        $quantity = (float) str_replace(',', '', $quantity);
+        $unitPrice = (float) str_replace(',', '', $unitPrice);
+
+        // Perform calculations
+        $totalSum = $quantity * $unitPrice;
+        $difference = $startSum - $totalSum;
+
+        if (($difference / $startSum) < 0.2) {
+            $marginSum = $difference * 0.03;
+        } else {
+            $marginSum = ($difference + $startSum) * 0.03;
+        }
+
+        $commission = $totalSum * 0.0015;
+        $totalMarginSum = $marginSum + $commission;
+        $formatMoney = fn($value) => number_format($value, 2);
+
+        $resultHtml = "
+    <div class='space-y-2'>
+        <div><span class='font-medium'>Общая сумма:</span> {$formatMoney($totalSum, 2)}</div>
+        <div><span class='font-medium'>Разность:</span> <span class='" . ($difference >= 0 ? 'text-green-600' : 'text-red-600') . "'>{$formatMoney($difference, 2)}</span></div>
+        <div><span class='font-medium'>Сумма залога:</span> <span class='" . ($marginSum >= 0 ? 'text-green-600' : 'text-red-600') . "'>{$formatMoney($marginSum)}</span></div>
+        <div><span class='font-medium'>Комиссия биржи:</span> {$formatMoney($commission)}</div>
+        <div><span class='font-medium'>Общая залоговая сумма:</span> <span class='" . ($totalMarginSum >= 0 ? 'text-green-600' : 'text-red-600') . "'>{$formatMoney($totalMarginSum)}</span></div>
+    </div>";
+
+        return new HtmlString($resultHtml);
+    }
 
     public function form(Form $form): Form
     {
@@ -91,6 +208,7 @@ class XaridData extends Page implements HasTable, HasForms
                     ->formatStateUsing(fn($state) => date('d.m.Y H:i', strtotime($state))), // Format date
                 TextColumn::make('fields.desc.value')
                     ->label('Наименование')
+                    ->extraHeaderAttributes(['style' => 'min-width: 50rem;'])
                     ->wrap()
                     ->grow()
                     ->verticalAlignment(VerticalAlignment::Start)
@@ -99,13 +217,18 @@ class XaridData extends Page implements HasTable, HasForms
                 TextColumn::make('fields.amount.value')
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->formatStateUsing(function ($state) {
-                        if (preg_match('/(\d+)\s*шт/', $state, $matches)) {
-                            $quantity = (int)$matches[1]; // Extract and convert to integer
-                            session(['qty' => $quantity]); // Store only the numeric part in the session
+                        if (preg_match('/(\d+(?:[.,]\d+)?)\s*(\p{L}*)/u', $state, $matches)) {
+                            $quantity = str_replace(',', '.', $matches[1]); // Replace comma with dot for decimal
+                            $quantity = (float)$quantity; // Convert to float
+                            session(['qty' => $quantity]); // Store the numeric part in the session
+                            $unit = $matches[2] ?: 'шт'; // Default to 'шт' if no unit is specified
+                            session(['unit' => $unit]);
+                            return number_format($quantity, 0, '.', ' ') . ' ' . $unit;
                         } else {
                             session(['qty' => null]); // Set to null if parsing fails
+                            session(['unit' => null]);
+                            return $state; // Return original state if parsing fails
                         }
-                        return $state;
                     })
                     ->label('Объем'),
                 TextColumn::make('fields.price.value')
