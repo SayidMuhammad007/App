@@ -55,7 +55,7 @@ class XaridData extends Page implements HasTable, HasForms
                                 ->label('Стартовая сумма товара')
                                 ->mask(RawJs::make('$money($input)'))
                                 ->stripCharacters(',')
-                                ->default($data['price'])
+                                ->default($data['price'] ?? '')
                                 ->required()
                                 ->disabled()
                                 ->reactive(),
@@ -63,7 +63,7 @@ class XaridData extends Page implements HasTable, HasForms
                                 ->label('Количество')
                                 ->mask(RawJs::make('$money($input)'))
                                 ->stripCharacters(',')
-                                ->default($qty)
+                                ->default($qty ?? '')
                                 ->required()
                                 ->disabled()
                                 ->reactive(),
