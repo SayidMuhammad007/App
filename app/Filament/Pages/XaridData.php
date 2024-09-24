@@ -17,7 +17,6 @@ use Filament\Forms\Form;
 use Filament\Forms;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Placeholder;
-use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Support\Enums\VerticalAlignment;
 use Filament\Support\RawJs;
@@ -102,26 +101,6 @@ class XaridData extends Page implements HasTable, HasForms
 
     private function calculateResults($startSum, $quantity, $unitPrice): HtmlString
     {
-        // $startSum = (float) str_replace(',', '', $startSum);
-        // $quantity = (float) str_replace(',', '', $quantity);
-        // $unitPrice = (float) str_replace(',', '', $unitPrice);
-
-        // $totalSum = $quantity * $unitPrice;
-        // $difference = $startSum - $totalSum;
-
-        // if (abs($difference / $startSum) < 0.2) {
-        //     $marginSum = $difference * 0.03;
-        // } else {
-        //     $marginSum = ($difference + $startSum) * 0.03;
-        // }
-
-        // $commission = $totalSum * 0.0015;
-        // $totalMarginSum = $marginSum + $commission;
-
-        // $formatMoney = fn($value) => number_format(abs($value), 2, '.', ' ') . ' UZS';
-        // $formatWithSign = fn($value) => ($value >= 0 ? '+' : '-') . $formatMoney($value);
-
-
         $startSum = (float) str_replace(',', '', $startSum);
         $quantity = (float) str_replace(',', '', $quantity);
         $unitPrice = (float) str_replace(',', '', $unitPrice);
@@ -161,8 +140,8 @@ class XaridData extends Page implements HasTable, HasForms
                         TextInput::make('proc_id')
                             ->label('Proc ID')
                             ->required()
+                            ->numeric()
                             ->placeholder('Enter Proc ID')
-                            ->maxWidth('md')
                             ->columnSpanFull(),
                         Actions::make([
                             Action::make('find')
@@ -170,7 +149,7 @@ class XaridData extends Page implements HasTable, HasForms
                                 ->action('findProcId')
                                 ->button()
                                 ->color('primary')
-                                ->size('md')
+                                ->size('lg')
                         ])
                             ->columnSpanFull()
                     ])
@@ -204,16 +183,17 @@ class XaridData extends Page implements HasTable, HasForms
                     ->label('ID'),
                 TextColumn::make('created_at')
                     ->verticalAlignment(VerticalAlignment::Start)
+                    ->wrap()
                     ->label('Дата запроса')
                     ->formatStateUsing(fn($state) => date('d.m.Y H:i', strtotime($state))), // Format date
                 TextColumn::make('fields.desc.value')
                     ->label('Наименование')
-                    ->extraHeaderAttributes(['style' => 'min-width: 50rem;'])
+                    ->extraHeaderAttributes(['style' => 'min-width: 40rem;'])
                     ->wrap()
                     ->grow()
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->html()
-                    ->formatStateUsing(fn($state, $record) => '<a href="https://xt-xarid.uz/procedure/' . $record->proc_id . '/core" target="_blank" rel="noreferrer noopener">' . $state . '</a>'),
+                    ->formatStateUsing(fn($state, $record) => '<a href="https://xt-xarid.uz/procedure/' . $record->proc_id . '/core" target="_blank" rel="noreferrer noopener" class="text-primary-600 hover:text-primary-500 underline">' . $state . '</a>'),
                 TextColumn::make('fields.amount.value')
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->formatStateUsing(function ($state) {
@@ -246,9 +226,6 @@ class XaridData extends Page implements HasTable, HasForms
                         return number_format($sum, 2) . ' ' . strtoupper($currency); // Format to two decimal places and append currency
                     }),
                 // Add additional columns as necessary
-                TextColumn::make('fields.close_at.value')
-                    ->verticalAlignment(VerticalAlignment::Start)
-                    ->label('Дата завершения'),
                 TextColumn::make('fields.regions.value')
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->html()
@@ -259,9 +236,13 @@ class XaridData extends Page implements HasTable, HasForms
                     ->label('Данные о покупателе1')
                     ->html()
                     ->formatStateUsing(
-                        fn($state, $record) => ($record->company_data['full_title'] ?? '') . '<br>' .
-                            ($record->company_data['title'] ?? '') . '<br>' .
-                            ($record->debug['params']['data_sign']['inn'] ?? 'Нет ИНН')
+                        fn($state, $record) => ($record->company_data['full_title'] ?? 'No full title available') . '<br>' .
+                            ($record->company_data['title'] ?? 'No title available') . '<br>' .
+                            (
+                                isset($record->debug['params']['data_sign']['inn'])
+                                ? '<a href="https://orginfo.uz/search/all/?q=' . e($record->debug['params']['data_sign']['inn']) . '" target="_blank" rel="noreferrer noopener" class="text-primary-600 hover:text-primary-500 underline">' . e($record->debug['params']['data_sign']['inn']) . '</a>'
+                                : 'Нет ИНН'
+                            )
                     ),
                 TextColumn::make('debug?.params?.data_sign?.meta?.company_name')
                     ->label('Данные о покупателе2')
@@ -303,6 +284,9 @@ class XaridData extends Page implements HasTable, HasForms
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->label('Статус')
                     ->formatStateUsing(fn($state) => $this->getStatusLabel($state)),
+                TextColumn::make('fields.close_at.value')
+                    ->verticalAlignment(VerticalAlignment::Start)
+                    ->label('Дата завершения'),
                 TextColumn::make('fields.header.hide_value')
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->label('Категория')
