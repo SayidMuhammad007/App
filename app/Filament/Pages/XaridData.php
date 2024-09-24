@@ -286,19 +286,20 @@ class XaridData extends Page implements HasTable, HasForms
                     ->formatStateUsing(fn($state) => $this->getStatusLabel($state)),
                 TextColumn::make('fields.close_at.value')
                     ->verticalAlignment(VerticalAlignment::Start)
+                    // ->getStateUsing(fn($record)=>dd($record))
                     ->label('Дата завершения'),
                 TextColumn::make('fields.header.hide_value')
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->label('Категория')
                     ->wrap()
-                    ->formatStateUsing(fn($state, $record) => '<a href="https://xt-xarid.uz/procedure/' . $record->proc_id . '/core" target="_blank" rel="noreferrer noopener">' . $state . '</a>')
+                    ->formatStateUsing(fn($state, $record) => '<a href="https://xt-xarid.uz/procedure/' . $record->proc_id . '/core" target="_blank" rel="noreferrer noopener" class="text-primary-600 hover:text-primary-500 underline">' . $state . '</a>')
                     ->html(),
-                TextColumn::make('agree')
+                TextColumn::make('procedure')
                     ->label('Выигравший')
                     ->verticalAlignment(VerticalAlignment::Start)
                     ->formatStateUsing(
                         fn($state, $record) =>
-                        '<a href="https://xt-xarid.uz/workspace/contract/' . $record->proc_id . '.1.1/core" target="_blank" rel="noreferrer noopener">Выигравший</a>'
+                        '<a href="https://xt-xarid.uz/workspace/contract/' . $record->proc_id . '.1.1/core" target="_blank" rel="noreferrer noopener" class="text-primary-600 hover:text-primary-500 underline">Выигравший</a>'
                     )
                     ->html()
             ])
