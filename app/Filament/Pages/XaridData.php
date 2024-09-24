@@ -14,10 +14,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Forms\Components\Actions;
-use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\TextColumn\TextColumnSize;
-use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\VerticalAlignment;
 
 class XaridData extends Page implements HasTable, HasForms
@@ -58,7 +55,6 @@ class XaridData extends Page implements HasTable, HasForms
                                 ->color('primary')
                                 ->size('md')
                         ])
-                            // ->alignment(Alignment::Right)
                             ->columnSpanFull()
                     ])
                     ->columns(1)
@@ -87,47 +83,55 @@ class XaridData extends Page implements HasTable, HasForms
             ->emptyStateDescription('No data found for the given Proc ID.')
             ->columns([
                 TextColumn::make('proc_id')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label('ID'),
                 TextColumn::make('created_at')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label('Дата запроса')
                     ->formatStateUsing(fn($state) => date('d.m.Y H:i', strtotime($state))), // Format date
-                // TextColumn::make('fields.desc.value')
-                //     ->label('Наименование')
-                //     ->verticalAlignment(VerticalAlignment::Start)
-                //     ->size(TextColumnSize::Small)
-                //     ->grow()
-                //     ->wrap()
-                //     ->width('lg')
-                //     ->formatStateUsing(fn($state, $record) => '<a href="https://xt-xarid.uz/procedure/' . $record->proc_id . '/core" target="_blank" rel="noreferrer noopener">' . $state . '</a>')
-                //     ->html(),
+                TextColumn::make('fields.desc.value')
+                    ->label('Наименование')
+                    ->wrap()
+                    ->grow()
+                    ->verticalAlignment(VerticalAlignment::Start)
+                    ->html()
+                    ->formatStateUsing(fn($state, $record) => '<a href="https://xt-xarid.uz/procedure/' . $record->proc_id . '/core" target="_blank" rel="noreferrer noopener">' . $state . '</a>'),
                 TextColumn::make('fields.amount.value')
+                    ->verticalAlignment(VerticalAlignment::Start)
+                    ->formatStateUsing(function ($state) {
+                        if (preg_match('/(\d+)\s*шт/', $state, $matches)) {
+                            $quantity = (int)$matches[1]; // Extract and convert to integer
+                            session(['qty' => $quantity]); // Store only the numeric part in the session
+                        } else {
+                            session(['qty' => null]); // Set to null if parsing fails
+                        }
+                        return $state;
+                    })
                     ->label('Объем'),
                 TextColumn::make('fields.price.value')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label('Цена'),
                 TextColumn::make('lot_id')
                     ->label('Сумма')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->getStateUsing(function ($record) {
-                        // Retrieve values from the record
                         $price = $record->price; // Assuming this is a numeric value
                         $amount = preg_replace('/\D/', '', $record->fields['amount']['value']); // Remove non-numeric characters
                         $currency = preg_replace('/[^a-zA-Z]/', '', $record->fields['price']['value']); // Extract currency
-
-                        // Convert amount to an integer (if needed)
                         $amount = (int)$amount;
-
-                        // Calculate the total sum
                         $sum = $price * $amount;
-
-                        // Return the formatted result
                         return number_format($sum, 2) . ' ' . strtoupper($currency); // Format to two decimal places and append currency
                     }),
                 // Add additional columns as necessary
                 TextColumn::make('fields.close_at.value')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label('Дата завершения'),
                 TextColumn::make('fields.regions.value')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->html()
                     ->label('Регион заявленный в лоте'),
                 TextColumn::make('company_data.full_title')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->wrap()
                     ->label('Данные о покупателе1')
                     ->html()
@@ -138,6 +142,7 @@ class XaridData extends Page implements HasTable, HasForms
                     ),
                 TextColumn::make('debug?.params?.data_sign?.meta?.company_name')
                     ->label('Данные о покупателе2')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->wrap()
                     ->html()
                     ->getStateUsing(
@@ -147,8 +152,10 @@ class XaridData extends Page implements HasTable, HasForms
                         }
                     ),
                 TextColumn::make('participants_count')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label('Конкурентов'),
                 TextColumn::make('unique_viewers')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->getStateUsing(function ($record) {
                         if (is_null($record->unique_viewers)) {
                             return 0; // Or any default value you prefer
@@ -170,15 +177,18 @@ class XaridData extends Page implements HasTable, HasForms
                     })
                     ->label('👁'),
                 TextColumn::make('status')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label('Статус')
                     ->formatStateUsing(fn($state) => $this->getStatusLabel($state)),
                 TextColumn::make('fields.header.hide_value')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->label('Категория')
                     ->wrap()
                     ->formatStateUsing(fn($state, $record) => '<a href="https://xt-xarid.uz/procedure/' . $record->proc_id . '/core" target="_blank" rel="noreferrer noopener">' . $state . '</a>')
                     ->html(),
                 TextColumn::make('agree')
                     ->label('Выигравший')
+                    ->verticalAlignment(VerticalAlignment::Start)
                     ->formatStateUsing(
                         fn($state, $record) =>
                         '<a href="https://xt-xarid.uz/workspace/contract/' . $record->proc_id . '.1.1/core" target="_blank" rel="noreferrer noopener">Выигравший</a>'

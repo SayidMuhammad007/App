@@ -65,7 +65,7 @@ class XaridData extends Model
                 $result[$boolField] = (bool) $result[$boolField];
             }
         }
-
+        session(['result' => $result]);
         return $result ? [$result] : [];
     }
 }
