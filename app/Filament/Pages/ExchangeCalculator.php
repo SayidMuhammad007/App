@@ -8,6 +8,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Support\RawJs;
+use Illuminate\Support\Facades\Session;
 
 class ExchangeCalculator extends Page implements HasForms
 {
@@ -33,11 +34,11 @@ class ExchangeCalculator extends Page implements HasForms
     public function form(Form $form): Form
     {
         // Retrieve session data safely
-        // $data = session('result') ?? []; // Default to an empty array if 'result' is not set
-        // $qty = session('qty', 0); // Default to 0 if 'qty' is not set
+        $data = Session::get('result') ?? []; // Default to an empty array if 'result' is not set
+        $qty = Session::get('qty', 0); // Default to 0 if 'qty' is not set
 
-        // // Check if $data is an array and has the 'price' key
-        // $defaultPrice = is_array($data) && isset($data['price']) ? $data['price'] : '';
+        // Check if $data is an array and has the 'price' key
+        $defaultPrice = is_array($data) && isset($data['price']) ? $data['price'] : '';
 
         return $form
             ->schema([
@@ -45,13 +46,13 @@ class ExchangeCalculator extends Page implements HasForms
                     ->label('Стартовая сумма товара')
                     ->mask(RawJs::make('$money($input)'))
                     ->stripCharacters(',')
-                    // ->default($defaultPrice)
+                    ->default($defaultPrice)
                     ->required(),
                 TextInput::make('quantity')
                     ->label('Количество')
                     ->mask(RawJs::make('$money($input)'))
                     ->stripCharacters(',')
-                    // ->default($qty ?? '') // Default to empty string if qty is not set
+                    ->default($qty ?? '') // Default to empty string if qty is not set
                     ->required(),
                 TextInput::make('unitPrice')
                     ->label('Моя цена за единицу товара')
