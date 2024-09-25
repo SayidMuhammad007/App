@@ -31,6 +31,8 @@ class XaridData extends Page implements HasTable, HasForms
 
     protected static string $view = 'filament.pages.xarid-data';
 
+    protected static ?int $navigationSort = 1;
+
     public $proc_id = null; // Default value
 
     public function mount()

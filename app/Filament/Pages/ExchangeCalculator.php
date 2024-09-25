@@ -16,6 +16,8 @@ class ExchangeCalculator extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-calculator';
 
+    protected static ?int $navigationSort = 2;
+
     protected static string $view = 'filament.pages.exchange-calculator';
 
     public $startSum = 0;
